@@ -1,0 +1,37 @@
+{
+  "endpoints": [
+    {
+      "path": "/weather",
+      "method": "GET",
+      "params": {
+        "lons": "105.85",
+        "lats": "21.03",
+        "start_year": 2024,
+        "end_year": 2024
+      },
+      "schema": {
+        "type": "object",
+        "properties": {
+          "duration": {"type": "number"},
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "header": {"type": "array", "items": {"type": "string"}},
+                "value": {
+                  "type": "array",
+                  "items": {"type": "array", "items": {"type": "number"}}
+                },
+                "location": {"type": "array", "items": {"type": "number"}}
+              },
+              "required": ["header", "value", "location"]
+            }
+          }
+        },
+        "required": ["duration", "data"]
+      }
+    }
+
+  ]
+}
