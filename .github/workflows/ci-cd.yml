@@ -45,7 +45,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: trungpham09nov/weather-api2:latest
+          tags: trungpham09nov/weather-api3:latest
 
 # deploy:
 #   runs-on: ubuntu-latest
