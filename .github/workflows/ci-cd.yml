@@ -26,7 +26,7 @@ jobs:
 
       - name: Run API contract tests
         run: |
-          pytest -v tests/test_api_contract.py
+          pytest -v tests/test_api_contract2.py
 
   docker:
     runs-on: ubuntu-latest

@@ -39,7 +39,7 @@ def stop_uvicorn(process):
         except subprocess.TimeoutExpired:
             process.kill()
 
-def test_weather_api_contract():
+def test_api_contract2():
     process = start_uvicorn()
     try:
         with open(CONTRACT_FILE, "r") as f:
