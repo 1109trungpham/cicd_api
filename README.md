@@ -14,6 +14,7 @@ project/
 
 ```bash
 python -m pip install fastapi uvicorn aiohttp netCDF4 pandas xarray zarr fsspec pytest requests jsonschema
+python-multipart
 ```
 
 ```
