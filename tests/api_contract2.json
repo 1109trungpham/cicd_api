@@ -1,0 +1,38 @@
+{
+  "endpoints": [
+    {
+      "path": "/weather",
+      "method": "POST",
+      "query": {
+        "start_year": 2021,
+        "end_year": 2021,
+        "output_format": "json"
+      },
+      "files": {
+        "file": "tests/sample_coords.csv"
+      },
+      "schema": {
+        "type": "object",
+        "properties": {
+          "duration": {"type": "number"},
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "header": {"type": "array", "items": {"type": "string"}},
+                "value": {
+                  "type": "array",
+                  "items": {"type": "array", "items": {"type": "number"}}
+                },
+                "location": {"type": "array", "items": {"type": "number"}}
+              },
+              "required": ["header", "value", "location"]
+            }
+          }
+        },
+        "required": ["duration", "data"]
+      }
+    }
+  ]
+}

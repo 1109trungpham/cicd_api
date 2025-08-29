@@ -1,7 +1,10 @@
 import pandas as pd
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, UploadFile, File, Query
+from fastapi.responses import JSONResponse, Response
 import xarray as xr
 import time
+import bz2
+import json
 from pydantic import BaseModel
 from typing import List
 
@@ -16,20 +19,22 @@ class WeatherMultiResponse(BaseModel):
 
 app = FastAPI()
 
-@app.get("/weather", response_model=WeatherMultiResponse)
+@app.post("/weather")
 async def get_weather(
-    lons: str = Query(..., description="Comma-separated longitudes"),
-    lats: str = Query(..., description="Comma-separated latitudes"),
+    file: UploadFile = File(..., description="CSV file with lon,lat columns"),
     start_year: int = Query(..., description="Start year"),
-    end_year: int = Query(..., description="End year")
+    end_year: int = Query(..., description="End year"),
+    output_format: str = Query("json", description="Output format: json or bz2")
 ):
     start_time = time.time()
 
-    lon_list = [float(x.strip()) for x in lons.split(',')]
-    lat_list = [float(x.strip()) for x in lats.split(',')]
-
-    if len(lon_list) != len(lat_list):
-        raise ValueError("Number of longitudes and latitudes must match")
+    # Đọc file CSV
+    df_coords = pd.read_csv(file.file)
+    if not {"lon", "lat"}.issubset(df_coords.columns):
+        return JSONResponse(
+            status_code=400,
+            content={"error": "CSV must contain 'lon' and 'lat' columns"}
+        )
 
     filepath = 'https://nasa-power.s3.amazonaws.com/merra2/temporal/power_merra2_daily_temporal_lst.zarr'
     ds = xr.open_zarr(filepath, consolidated=True)
@@ -40,7 +45,9 @@ async def get_weather(
 
     responses = []
 
-    for lon, lat in zip(lon_list, lat_list):
+    for _, row in df_coords.iterrows():
+        lon, lat = row["lon"], row["lat"]
+
         df = ds[variables].sel(
             lat=lat,
             lon=lon,
@@ -54,7 +61,6 @@ async def get_weather(
         df['day_of_year'] = df['time'].dt.dayofyear
 
         df = df[['day', 'month', 'year', 'day_of_year', 'T2M_MAX', 'T2M_MIN', 'PRECTOTCORR']]
-
         values = df.values.tolist()
 
         responses.append(WeatherResponse(
@@ -64,5 +70,11 @@ async def get_weather(
         ))
 
     duration = time.time() - start_time
+    result = WeatherMultiResponse(duration=round(duration, 2), data=responses)
 
-    return WeatherMultiResponse(duration=round(duration, 2), data=responses)
+    # Xuất kết quả theo định dạng
+    if output_format == "bz2":
+        compressed = bz2.compress(json.dumps(result.dict()).encode("utf-8"))
+        return Response(content=compressed, media_type="application/x-bzip2")
+    else:
+        return JSONResponse(content=result.dict())
